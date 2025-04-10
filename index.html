@@ -221,7 +221,7 @@
                         // If Visa Status is NOT "Completed"
                         if (visaStatus !== 'Completed') {
                             otherInfoDiv.innerHTML = ` 
-                                <p><strong>Visa Expiry Date:</strong> ${data['Visa Expiry Date'] || 'Not Available'}</p>
+                                <p><strong>Pass Expiry Date:</strong> ${data['Pass Expiry Date'] || 'Not Available'}</p>
                                 <p><strong>Submission Date:</strong> ${data['Submission Date'] || 'Not Available'}</p>
                             `;
 
@@ -238,7 +238,7 @@
                             }
                         }
 
-                        // If Visa Status IS "Completed", show only the Completion Date and hide Visa Expiry Date & Submission Date
+                        // If Visa Status IS "Completed", show only the Completion Date and hide Pass Expiry Date & Submission Date
                         if (visaStatus === 'Completed') {
                             if (data['Completion Date']) {
                                 const completionDate = new Date(data['Completion Date']);
