@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visa Status Tracker</title>
+    <style>
+        body {
+            font-family: 'Open Sans', sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 600px;
+            opacity: 0;
+            animation: fadeIn 0.5s ease-in forwards;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        label {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            margin-bottom: 20px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #status-container {
+            display: none;
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            background-color: #f0f0f0;
+            opacity: 0;
+            animation: fadeIn 1s ease-in forwards;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .name {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .loading {
+            text-align: center;
+            font-size: 18px;
+            display: none;
+        }
+        /* Loading spinner */
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 2s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+        .note {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #555;
+            line-height: 1.6;
+        }
+        .note strong {
+            color: #333;
+        }
+
+        /* Remove bullets from the remarks section */
+        #other-info ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        #other-info ul li {
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Visa Status Tracker</h1>
+        <label for="passportNumber">Enter Passport Number:</label>
+        <input type="text" id="passportNumber" name="passportNumber" placeholder="Enter Passport Number">
+        <button onclick="checkVisaStatus()">Check Status</button>
+        <button onclick="clearFields()">Clear</button>
+
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>Loading...</p>
+        </div>
+
+        <div id="status-container">
+            <h2>Visa Status:</h2>
+            <p id="name-display" class="name"></p>
+            <p id="status-message"></p>
+            <div id="other-info"></div>
+
+            <!-- Important Notes Section -->
+            <div class="note" id="note-section" style="display: none;">
+                <p><strong>We are pleased to inform you that your child(ren)'s visa(s) is/are now ready for collection at the following location:</strong></p>
+                <p><strong>Collection Details:</strong></p>
+                <p>Office Hours: Monday to Friday, 8 AM to 5 PM (Lunch hour: 12 noon to 1 PM)</p>
+                <p>Location: Block A, Admission and Visa Office</p>
+
+                <p><strong>Important information:</strong></p>
+                <ul>
+                    <li>Please ensure that all passport information is accurate. Should you have any questions or concerns, please contact us immediately.</li>
+                    <li>If you are in the process of applying for a Guardian Visa, we kindly request that you submit the necessary documents to us at your earliest convenience to avoid any delays.</li>
+                    <li>If your social pass is nearing its expiration, we kindly encourage you to make arrangements to leave the country before it expires.</li>
+                </ul>
+                <p>For further assistance or inquiries, feel free to reach out to us using the contact details provided below.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const webAppUrl = 'https://script.google.com/macros/s/AKfycbz-OUIsBE4iMe6F6-HD5oQX-MORAZ7PPpnzhiUmMn8s7XR-ltN-XuPaXwZTWK2LOS8E/exec';  // Replace with your Web App URL
+
+        function checkVisaStatus() {
+            const passportNumberInput = document.getElementById('passportNumber');
+            const statusContainer = document.getElementById('status-container');
+            const statusMessage = document.getElementById('status-message');
+            const otherInfoDiv = document.getElementById('other-info');
+            const nameDisplay = document.getElementById('name-display');
+            const noteSection = document.getElementById('note-section');
+            const loadingDiv = document.getElementById('loading');
+
+            const passportNumber = passportNumberInput.value.trim();
+
+            if (!passportNumber) {
+                statusMessage.textContent = 'Please enter your passport number.';
+                statusMessage.className = 'error';
+                statusContainer.style.display = 'block';
+                nameDisplay.textContent = '';
+                otherInfoDiv.innerHTML = '';
+                return;
+            }
+
+            // Show loading spinner and hide the results section
+            loadingDiv.style.display = 'block';
+            statusContainer.style.display = 'none';
+
+            fetch(`${webAppUrl}?passportNumber=${passportNumber}`)
+                .then(response => response.json())
+                .then(data => {
+                    loadingDiv.style.display = 'none';
+                    statusContainer.style.display = 'block';
+                    statusMessage.textContent = '';
+                    otherInfoDiv.innerHTML = '';
+                    nameDisplay.textContent = '';
+                    noteSection.style.display = 'none';  // Hide notes initially
+
+                    if (data.error) {
+                        statusMessage.textContent = data.error;
+                        statusMessage.className = 'error';
+                    } else {
+                        nameDisplay.textContent = data['Passport Holder Name'] ? `Name: ${data['Passport Holder Name']}` : 'Passport Holder Name: Not Available';
+
+                        // Handle Visa Status styling based on the value
+                        const visaStatus = data['Visa Status'];
+                        if (visaStatus === 'Rejected') {
+                            statusMessage.textContent = `Visa Status: ${visaStatus}`;
+                            statusMessage.style = 'color: red; font-weight: bold;';
+                            statusContainer.style.backgroundColor = '#f8d7da'; // Red background for Rejected
+                        } else if (visaStatus === 'Completed') {
+                            statusMessage.textContent = `Visa Status: ${visaStatus}`;
+                            statusMessage.style = 'color: green; font-weight: bold;';
+                            statusContainer.style.backgroundColor = '#d4edda'; // Green background for Completed
+                        } else {
+                            statusMessage.textContent = `Visa Status: ${visaStatus}`;
+                            statusMessage.style = 'font-weight: bold;';
+                            statusContainer.style.backgroundColor = '#f0f0f0'; // Default background for other statuses
+                        }
+
+                        // If Visa Status is NOT "Completed"
+                        if (visaStatus !== 'Completed') {
+                            otherInfoDiv.innerHTML = ` 
+                                <p><strong>Visa Expiry Date:</strong> ${data['Visa Expiry Date'] || 'Not Available'}</p>
+                                <p><strong>Submission Date:</strong> ${data['Submission Date'] || 'Not Available'}</p>
+                            `;
+
+                            // Display Remarks in separate lines
+                            if (data['Remarks']) {  // Updated to 'Remarks' header name
+                                const remarks = data['Remarks'];  // Updated to 'Remarks' header name
+                                const remarksList = remarks.split('\n').map(item => `<li>${item.trim()}</li>`).join('');
+                                otherInfoDiv.innerHTML += `
+                                    <p><strong>Remarks:</strong></p>
+                                    <ul>${remarksList}</ul>
+                                `;
+                            } else {
+                                otherInfoDiv.innerHTML += `<p><strong>Remarks:</strong> Not Available</p>`;
+                            }
+                        }
+
+                        // If Visa Status IS "Completed", show only the Completion Date and hide Visa Expiry Date & Submission Date
+                        if (visaStatus === 'Completed') {
+                            if (data['Completion Date']) {
+                                const completionDate = new Date(data['Completion Date']);
+                                const formattedDate = `${completionDate.getDate()}/${completionDate.getMonth() + 1}/${completionDate.getFullYear()}`;
+                                otherInfoDiv.innerHTML += `
+                                    <p><strong>Completion Date:</strong> ${formattedDate}</p>
+                                `;
+                            }
+                            noteSection.style.display = 'block';  // Show the important notes section
+                        }
+                    }
+                })
+                .catch(error => {
+                    loadingDiv.style.display = 'none';
+                    statusMessage.textContent = 'Error fetching data. Please try again later.';
+                    statusMessage.className = 'error';
+                    statusContainer.style.display = 'block';
+                });
+        }
+
+        function clearFields() {
+            document.getElementById('passportNumber').value = '';
+            document.getElementById('status-container').style.display = 'none';
+            document.getElementById('note-section').style.display = 'none';
+            document.getElementById('loading').style.display = 'none';
+        }
+    </script>
+
+</body>
+</html>
