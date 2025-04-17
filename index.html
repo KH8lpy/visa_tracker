@@ -60,16 +60,25 @@
             padding: 15px;
             border-radius: 5px;
             background-color: #f0f0f0; /* Default gray background */
+            border-left: 5px solid #6c757d; /* Default gray border */
             opacity: 0;
             animation: fadeIn 1s ease-in forwards;
         }
         #status-container.approved {
-            background-color: #d4edda; /* Green background for Approved status */
+            background-color: #d4edda; /* Green background for Completed status */
             border-left: 5px solid #28a745;
         }
         #status-container.error {
-            background-color: #f8d7da;
+            background-color: #f8d7da; /* Red background for Rejected status */
             border-left: 5px solid #dc3545;
+        }
+        #status-container.pending {
+            background-color: #fffef0; /* LIGHT YELLOW background for Pending/Submitted */
+            border-left: 5px solid #ffeb3b;
+        }
+        #status-container.incomplete {
+            background-color: #f5f5f5; /* LIGHT GRAY background for Incomplete Document */
+            border-left: 5px solid #9e9e9e;
         }
         .status-approved {
             color: #155724;
@@ -77,10 +86,15 @@
         }
         .status-error {
             color: #721c24;
-        }
-        .name {
             font-weight: bold;
-            margin-bottom: 10px;
+        }
+        .status-pending {
+            color: #8a6d3b; /* Darker yellow for text */
+            font-weight: bold;
+        }
+        .status-incomplete {
+            color: #333333; /* Dark gray for text */
+            font-weight: bold;
         }
         .loading {
             text-align: center;
@@ -199,32 +213,51 @@
                         const passport = data["Passport Number"] || passportNumber;
                         const status = data["Visa Status"] || "Unknown";
 
+                        // Determine status class based on status value
+                        let statusClass = '';
+                        let containerClass = '';
+                        
                         if (status === 'Completed') {
-                            statusContainer.className = 'approved';
-                            let completionDate = '';
-                            if (data['Completion Date']) {
-                                const date = new Date(data['Completion Date']);
-                                completionDate = `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
-                            }
-                            
-                            resultDetails.innerHTML = `
-                                <ul>
-                                    <li><strong>Student Name:</strong> ${name}</li>
-                                    <li><strong>Passport Number:</strong> ${passport}</li>
-                                    <li><strong>Status:</strong> <span class="status-approved">${status}</span></li>
-                                    ${completionDate ? `<li><strong>Completion Date:</strong> ${completionDate}</li>` : ''}
-                                </ul>
-                            `;
+                            statusClass = 'status-approved';
+                            containerClass = 'approved';
                             noteSection.style.display = 'block';
-                        } else {
-                            statusContainer.className = 'error';
-                            let detailsHtml = `
-                                <ul>
-                                    <li><strong>Student Name:</strong> ${name}</li>
-                                    <li><strong>Passport Number:</strong> ${passport}</li>
-                                    <li><strong>Status:</strong> <span class="status-error">${status}</span></li>
-                            `;
-                            
+                        } 
+                        else if (status === 'Rejected') {
+                            statusClass = 'status-error';
+                            containerClass = 'error';
+                        }
+                        else if (status === 'Submitted' || status === 'Pending Submission') {
+                            statusClass = 'status-pending';
+                            containerClass = 'pending';
+                        }
+                        else if (status === 'Incomplete Document') {
+                            statusClass = 'status-incomplete';
+                            containerClass = 'incomplete';
+                        }
+                        else {
+                            statusClass = 'status-pending';
+                            containerClass = 'pending';
+                        }
+
+                        statusContainer.className = containerClass;
+                        
+                        let completionDate = '';
+                        if (data['Completion Date']) {
+                            const date = new Date(data['Completion Date']);
+                            completionDate = `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
+                        }
+                        
+                        let detailsHtml = `
+                            <ul>
+                                <li><strong>Student Name:</strong> ${name}</li>
+                                <li><strong>Passport Number:</strong> ${passport}</li>
+                                <li><strong>Status:</strong> <span class="${statusClass}">${status}</span></li>
+                        `;
+                        
+                        if (status === 'Completed' && completionDate) {
+                            detailsHtml += `<li><strong>Completion Date:</strong> ${completionDate}</li>`;
+                        }
+                        else {
                             if (data['Pass Expiry Date']) {
                                 detailsHtml += `<li><strong>Pass Expiry Date:</strong> ${data['Pass Expiry Date']}</li>`;
                             }
@@ -232,18 +265,18 @@
                             if (data['Submission Date']) {
                                 detailsHtml += `<li><strong>Submission Date:</strong> ${data['Submission Date']}</li>`;
                             }
-                            
-                            if (data['Remarks']) {
-                                const remarks = data['Remarks'].split('\n').map(item => `<li>${item.trim()}</li>`).join('');
-                                detailsHtml += `
-                                    <li><strong>Remarks:</strong></li>
-                                    <ul>${remarks}</ul>
-                                `;
-                            }
-                            
-                            detailsHtml += `</ul>`;
-                            resultDetails.innerHTML = detailsHtml;
                         }
+                        
+                        if (data['Remarks']) {
+                            const remarks = data['Remarks'].split('\n').map(item => `<li>${item.trim()}</li>`).join('');
+                            detailsHtml += `
+                                <li><strong>Remarks:</strong></li>
+                                <ul>${remarks}</ul>
+                            `;
+                        }
+                        
+                        detailsHtml += `</ul>`;
+                        resultDetails.innerHTML = detailsHtml;
                     }
                 })
                 .catch(error => {
