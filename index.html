@@ -59,16 +59,23 @@
             margin-top: 20px;
             padding: 15px;
             border-radius: 5px;
-            background-color: #f0f0f0;
+            background-color: #f0f0f0; /* Default gray background */
             opacity: 0;
             animation: fadeIn 1s ease-in forwards;
         }
-        .success {
-            background-color: #d4edda;
-            color: #155724;
+        #status-container.approved {
+            background-color: #d4edda; /* Green background for Approved status */
+            border-left: 5px solid #28a745;
         }
-        .error {
+        #status-container.error {
             background-color: #f8d7da;
+            border-left: 5px solid #dc3545;
+        }
+        .status-approved {
+            color: #155724;
+            font-weight: bold;
+        }
+        .status-error {
             color: #721c24;
         }
         .name {
@@ -80,7 +87,6 @@
             font-size: 18px;
             display: none;
         }
-        /* Loading spinner */
         .spinner {
             border: 4px solid #f3f3f3;
             border-top: 4px solid #3498db;
@@ -90,12 +96,10 @@
             animation: spin 2s linear infinite;
             margin: 0 auto;
         }
-
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-
         @keyframes fadeIn {
             0% { opacity: 0; }
             100% { opacity: 1; }
@@ -109,15 +113,12 @@
         .note strong {
             color: #333;
         }
-
-        /* Remove bullets from the remarks section */
-        #other-info ul {
+        #result-details ul {
             list-style-type: none;
             padding: 0;
         }
-
-        #other-info ul li {
-            margin-bottom: 5px;
+        #result-details ul li {
+            margin-bottom: 10px;
         }
     </style>
 </head>
@@ -126,7 +127,7 @@
     <div class="container">
         <h1>Visa Status Tracker</h1>
         <label for="passportNumber">Enter Passport Number:</label>
-        <input type="text" id="passportNumber" name="passportNumber" placeholder="Enter Passport Number">
+        <input type="text" id="passportNumber" placeholder="e.g., A1234567">
         <button onclick="checkVisaStatus()">Check Status</button>
         <button onclick="clearFields()">Clear</button>
 
@@ -137,10 +138,10 @@
 
         <div id="status-container">
             <h2>Visa Status:</h2>
-            <p id="name-display" class="name"></p>
-            <p id="status-message"></p>
-            <div id="other-info"></div>
-
+            <div id="result-details">
+                <!-- Will be populated dynamically -->
+            </div>
+            
             <!-- Important Notes Section -->
             <div class="note" id="note-section" style="display: none;">
                 <p><strong>We are pleased to inform you that your child(ren)'s visa(s) is/are now ready for collection at the following location:</strong></p>
@@ -160,111 +161,113 @@
     </div>
 
     <script>
-        const webAppUrl = 'https://script.google.com/macros/s/AKfycbz-OUIsBE4iMe6F6-HD5oQX-MORAZ7PPpnzhiUmMn8s7XR-ltN-XuPaXwZTWK2LOS8E/exec';  // Replace with your Web App URL
+        const webAppUrl = 'https://script.google.com/macros/s/AKfycbz-OUIsBE4iMe6F6-HD5oQX-MORAZ7PPpnzhiUmMn8s7XR-ltN-XuPaXwZTWK2LOS8E/exec';
 
         function checkVisaStatus() {
             const passportNumberInput = document.getElementById('passportNumber');
             const statusContainer = document.getElementById('status-container');
-            const statusMessage = document.getElementById('status-message');
-            const otherInfoDiv = document.getElementById('other-info');
-            const nameDisplay = document.getElementById('name-display');
+            const resultDetails = document.getElementById('result-details');
             const noteSection = document.getElementById('note-section');
             const loadingDiv = document.getElementById('loading');
 
             const passportNumber = passportNumberInput.value.trim();
 
             if (!passportNumber) {
-                statusMessage.textContent = 'Please enter your passport number.';
-                statusMessage.className = 'error';
+                resultDetails.innerHTML = `<p class="status-error">Please enter your passport number.</p>`;
                 statusContainer.style.display = 'block';
-                nameDisplay.textContent = '';
-                otherInfoDiv.innerHTML = '';
+                statusContainer.className = 'error';
                 return;
             }
 
-            // Show loading spinner and hide the results section
+            // Show loading
             loadingDiv.style.display = 'block';
             statusContainer.style.display = 'none';
+            resultDetails.innerHTML = '';
 
-            fetch(`${webAppUrl}?passportNumber=${passportNumber}`)
+            fetch(`${webAppUrl}?passportNumber=${encodeURIComponent(passportNumber)}`)
                 .then(response => response.json())
                 .then(data => {
                     loadingDiv.style.display = 'none';
                     statusContainer.style.display = 'block';
-                    statusMessage.textContent = '';
-                    otherInfoDiv.innerHTML = '';
-                    nameDisplay.textContent = '';
-                    noteSection.style.display = 'none';  // Hide notes initially
+                    noteSection.style.display = 'none';
 
                     if (data.error) {
-                        statusMessage.textContent = data.error;
-                        statusMessage.className = 'error';
+                        resultDetails.innerHTML = `<p class="status-error">${data.error}</p>`;
+                        statusContainer.className = 'error';
                     } else {
-                        nameDisplay.textContent = data['Passport Holder Name'] ? `Name: ${data['Passport Holder Name']}` : 'Passport Holder Name: Not Available';
+                        const name = data["Passport Holder Name"] || "Not Available";
+                        const passport = data["Passport Number"] || passportNumber;
+                        const status = data["Visa Status"] || "Unknown";
 
-                        // Handle Visa Status styling based on the value
-                        const visaStatus = data['Visa Status'];
-                        if (visaStatus === 'Rejected') {
-                            statusMessage.textContent = `Visa Status: ${visaStatus}`;
-                            statusMessage.style = 'color: red; font-weight: bold;';
-                            statusContainer.style.backgroundColor = '#f8d7da'; // Red background for Rejected
-                        } else if (visaStatus === 'Completed') {
-                            statusMessage.textContent = `Visa Status: ${visaStatus}`;
-                            statusMessage.style = 'color: green; font-weight: bold;';
-                            statusContainer.style.backgroundColor = '#d4edda'; // Green background for Completed
-                        } else {
-                            statusMessage.textContent = `Visa Status: ${visaStatus}`;
-                            statusMessage.style = 'font-weight: bold;';
-                            statusContainer.style.backgroundColor = '#f0f0f0'; // Default background for other statuses
-                        }
-
-                        // If Visa Status is NOT "Completed"
-                        if (visaStatus !== 'Completed') {
-                            otherInfoDiv.innerHTML = ` 
-                                <p><strong>Pass Expiry Date:</strong> ${data['Pass Expiry Date'] || 'Not Available'}</p>
-                                <p><strong>Submission Date:</strong> ${data['Submission Date'] || 'Not Available'}</p>
-                            `;
-
-                            // Display Remarks in separate lines
-                            if (data['Remarks']) {  // Updated to 'Remarks' header name
-                                const remarks = data['Remarks'];  // Updated to 'Remarks' header name
-                                const remarksList = remarks.split('\n').map(item => `<li>${item.trim()}</li>`).join('');
-                                otherInfoDiv.innerHTML += `
-                                    <p><strong>Remarks:</strong></p>
-                                    <ul>${remarksList}</ul>
-                                `;
-                            } else {
-                                otherInfoDiv.innerHTML += `<p><strong>Remarks:</strong> Not Available</p>`;
-                            }
-                        }
-
-                        // If Visa Status IS "Completed", show only the Completion Date and hide Pass Expiry Date & Submission Date
-                        if (visaStatus === 'Completed') {
+                        if (status === 'Completed') {
+                            statusContainer.className = 'approved';
+                            let completionDate = '';
                             if (data['Completion Date']) {
-                                const completionDate = new Date(data['Completion Date']);
-                                const formattedDate = `${completionDate.getDate()}/${completionDate.getMonth() + 1}/${completionDate.getFullYear()}`;
-                                otherInfoDiv.innerHTML += `
-                                    <p><strong>Completion Date:</strong> ${formattedDate}</p>
+                                const date = new Date(data['Completion Date']);
+                                completionDate = `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
+                            }
+                            
+                            resultDetails.innerHTML = `
+                                <ul>
+                                    <li><strong>Student Name:</strong> ${name}</li>
+                                    <li><strong>Passport Number:</strong> ${passport}</li>
+                                    <li><strong>Status:</strong> <span class="status-approved">${status}</span></li>
+                                    ${completionDate ? `<li><strong>Completion Date:</strong> ${completionDate}</li>` : ''}
+                                </ul>
+                            `;
+                            noteSection.style.display = 'block';
+                        } else {
+                            statusContainer.className = 'error';
+                            let detailsHtml = `
+                                <ul>
+                                    <li><strong>Student Name:</strong> ${name}</li>
+                                    <li><strong>Passport Number:</strong> ${passport}</li>
+                                    <li><strong>Status:</strong> <span class="status-error">${status}</span></li>
+                            `;
+                            
+                            if (data['Pass Expiry Date']) {
+                                detailsHtml += `<li><strong>Pass Expiry Date:</strong> ${data['Pass Expiry Date']}</li>`;
+                            }
+                            
+                            if (data['Submission Date']) {
+                                detailsHtml += `<li><strong>Submission Date:</strong> ${data['Submission Date']}</li>`;
+                            }
+                            
+                            if (data['Remarks']) {
+                                const remarks = data['Remarks'].split('\n').map(item => `<li>${item.trim()}</li>`).join('');
+                                detailsHtml += `
+                                    <li><strong>Remarks:</strong></li>
+                                    <ul>${remarks}</ul>
                                 `;
                             }
-                            noteSection.style.display = 'block';  // Show the important notes section
+                            
+                            detailsHtml += `</ul>`;
+                            resultDetails.innerHTML = detailsHtml;
                         }
                     }
                 })
                 .catch(error => {
+                    console.error("Error:", error);
                     loadingDiv.style.display = 'none';
-                    statusMessage.textContent = 'Error fetching data. Please try again later.';
-                    statusMessage.className = 'error';
                     statusContainer.style.display = 'block';
+                    statusContainer.className = 'error';
+                    resultDetails.innerHTML = `<p class="status-error">An error occurred while fetching the status.</p>`;
                 });
         }
 
         function clearFields() {
             document.getElementById('passportNumber').value = '';
             document.getElementById('status-container').style.display = 'none';
-            document.getElementById('note-section').style.display = 'none';
             document.getElementById('loading').style.display = 'none';
+            document.getElementById('note-section').style.display = 'none';
         }
+
+        // Listen for Enter key to trigger the checkVisaStatus function
+        document.getElementById('passportNumber').addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                checkVisaStatus();
+            }
+        });
     </script>
 
 </body>
