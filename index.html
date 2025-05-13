@@ -192,134 +192,144 @@ body {
         </div>
     </div>
 
-    <script>
-        const webAppUrl = 'https://script.google.com/macros/s/AKfycbz-OUIsBE4iMe6F6-HD5oQX-MORAZ7PPpnzhiUmMn8s7XR-ltN-XuPaXwZTWK2LOS8E/exec';
+<script>
+    const webAppUrl = 'https://script.google.com/macros/s/AKfycbz-OUIsBE4iMe6F6-HD5oQX-MORAZ7PPpnzhiUmMn8s7XR-ltN-XuPaXwZTWK2LOS8E/exec';
 
-        function checkVisaStatus() {
-            const passportNumberInput = document.getElementById('passportNumber');
-            const statusContainer = document.getElementById('status-container');
-            const resultDetails = document.getElementById('result-details');
-            const noteSection = document.getElementById('note-section');
-            const loadingDiv = document.getElementById('loading');
+    function checkVisaStatus() {
+        const passportNumberInput = document.getElementById('passportNumber');
+        const statusContainer = document.getElementById('status-container');
+        const resultDetails = document.getElementById('result-details');
+        const noteSection = document.getElementById('note-section');
+        const loadingDiv = document.getElementById('loading');
 
-            const passportNumber = passportNumberInput.value.trim();
+        const passportNumber = passportNumberInput.value.trim();
 
-            if (!passportNumber) {
-                resultDetails.innerHTML = `<p class="status-error">Please enter your passport number.</p>`;
+        if (!passportNumber) {
+            resultDetails.innerHTML = `<p class="status-error">Please enter your passport number.</p>`;
+            statusContainer.style.display = 'block';
+            statusContainer.className = 'error';
+            return;
+        }
+
+        loadingDiv.style.display = 'block';
+        statusContainer.style.display = 'none';
+        resultDetails.innerHTML = '';
+
+        fetch(`${webAppUrl}?passportNumber=${encodeURIComponent(passportNumber)}`)
+            .then(response => response.json())
+            .then(data => {
+                loadingDiv.style.display = 'none';
+                statusContainer.style.display = 'block';
+                noteSection.style.display = 'none';
+
+                if (data.error) {
+                    resultDetails.innerHTML = `<p class="status-error">${data.error}</p>`;
+                    statusContainer.className = 'error';
+                    return;
+                }
+
+                const name = data["Passport Holder Name"] || "Not Available";
+                const passport = data["Passport Number"] || passportNumber;
+                const status = data["Visa Status"] || "Unknown";
+
+                let statusClass = '';
+                let containerClass = '';
+
+                switch (status.toLowerCase()) {
+                    case 'completed':
+                        statusClass = 'status-completed';
+                        containerClass = 'completed';
+                        noteSection.style.display = 'block';
+                        break;
+                    case 'rejected':
+                    case 'withdraw':
+                        statusClass = 'status-withdraw';
+                        containerClass = 'withdraw';
+                        break;
+                    case 'submitted':
+                    case 'pending submission':
+                        statusClass = 'status-pending';
+                        containerClass = 'pending';
+                        break;
+                    case 'incomplete document':
+                        statusClass = 'status-incomplete';
+                        containerClass = 'incomplete';
+                        break;
+                    case 'document received':
+                        statusClass = 'status-document-received';
+                        containerClass = 'document-received';
+                        break;
+                    case 'kiv':
+                        statusClass = 'status-kiv';
+                        containerClass = 'kiv';
+                        break;
+                    default:
+                        statusClass = 'status-document-received';
+                        containerClass = 'document-received';
+                        break;
+                }
+
+                statusContainer.className = containerClass;
+
+                let completionDate = '';
+                if (data['Completion Date']) {
+                    const date = new Date(data['Completion Date']);
+                    completionDate = `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
+                }
+
+                let detailsHtml = `
+                    <ul>
+                        <li><strong>Student Name:</strong> ${name}</li>
+                        <li><strong>Passport Number:</strong> ${passport}</li>
+                        <li><strong>Status:</strong> <span class="${statusClass}">${status}</span></li>
+                `;
+
+                if (status.toLowerCase() === 'completed' && completionDate) {
+                    detailsHtml += `<li><strong>Completion Date:</strong> ${completionDate}</li>`;
+                } else {
+                    if (data['Pass Expiry Date']) {
+                        detailsHtml += `<li><strong>Pass Expiry Date:</strong> ${data['Pass Expiry Date']}</li>`;
+                    }
+
+                    if (data['Submission Date']) {
+                        detailsHtml += `<li><strong>Submission Date:</strong> ${data['Submission Date']}</li>`;
+                    }
+                }
+
+                if (data['Remarks']) {
+                    const remarks = data['Remarks'].split('\n').map(item => `<li>${item.trim()}</li>`).join('');
+                    detailsHtml += `
+                        <li><strong>Remarks:</strong></li>
+                        <ul>${remarks}</ul>
+                    `;
+                }
+
+                detailsHtml += `</ul>`;
+                resultDetails.innerHTML = detailsHtml;
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                loadingDiv.style.display = 'none';
                 statusContainer.style.display = 'block';
                 statusContainer.className = 'error';
-                return;
-            }
+                resultDetails.innerHTML = `<p class="status-error">An error occurred while fetching the status.</p>`;
+            });
+    }
 
-            // Show loading
-            loadingDiv.style.display = 'block';
-            statusContainer.style.display = 'none';
-            resultDetails.innerHTML = '';
+    function clearFields() {
+        document.getElementById('passportNumber').value = '';
+        document.getElementById('status-container').style.display = 'none';
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('note-section').style.display = 'none';
+    }
 
-            fetch(`${webAppUrl}?passportNumber=${encodeURIComponent(passportNumber)}`)
-                .then(response => response.json())
-                .then(data => {
-                    loadingDiv.style.display = 'none';
-                    statusContainer.style.display = 'block';
-                    noteSection.style.display = 'none';
-
-                    if (data.error) {
-                        resultDetails.innerHTML = `<p class="status-error">${data.error}</p>`;
-                        statusContainer.className = 'error';
-                    } else {
-                        const name = data["Passport Holder Name"] || "Not Available";
-                        const passport = data["Passport Number"] || passportNumber;
-                        const status = data["Visa Status"] || "Unknown";
-
-                        // Determine status class based on status value
-                        let statusClass = '';
-                        let containerClass = '';
-                        
-                        if (status === 'Completed') {
-                            statusClass = 'status-approved';
-                            containerClass = 'approved';
-                            noteSection.style.display = 'block';
-                        } 
-                        else if (status === 'Rejected') {
-                            statusClass = 'status-error';
-                            containerClass = 'error';
-                        }
-                        else if (status === 'Submitted' || status === 'Pending Submission') {
-                            statusClass = 'status-pending';
-                            containerClass = 'pending';
-                        }
-                        else if (status === 'Incomplete Document') {
-                            statusClass = 'status-incomplete';
-                            containerClass = 'incomplete';
-                        }
-                        else {
-                            statusClass = 'status-pending';
-                            containerClass = 'pending';
-                        }
-
-                        statusContainer.className = containerClass;
-                        
-                        let completionDate = '';
-                        if (data['Completion Date']) {
-                            const date = new Date(data['Completion Date']);
-                            completionDate = `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
-                        }
-                        
-                        let detailsHtml = `
-                            <ul>
-                                <li><strong>Student Name:</strong> ${name}</li>
-                                <li><strong>Passport Number:</strong> ${passport}</li>
-                                <li><strong>Status:</strong> <span class="${statusClass}">${status}</span></li>
-                        `;
-                        
-                        if (status === 'Completed' && completionDate) {
-                            detailsHtml += `<li><strong>Completion Date:</strong> ${completionDate}</li>`;
-                        }
-                        else {
-                            if (data['Pass Expiry Date']) {
-                                detailsHtml += `<li><strong>Pass Expiry Date:</strong> ${data['Pass Expiry Date']}</li>`;
-                            }
-                            
-                            if (data['Submission Date']) {
-                                detailsHtml += `<li><strong>Submission Date:</strong> ${data['Submission Date']}</li>`;
-                            }
-                        }
-                        
-                        if (data['Remarks']) {
-                            const remarks = data['Remarks'].split('\n').map(item => `<li>${item.trim()}</li>`).join('');
-                            detailsHtml += `
-                                <li><strong>Remarks:</strong></li>
-                                <ul>${remarks}</ul>
-                            `;
-                        }
-                        
-                        detailsHtml += `</ul>`;
-                        resultDetails.innerHTML = detailsHtml;
-                    }
-                })
-                .catch(error => {
-                    console.error("Error:", error);
-                    loadingDiv.style.display = 'none';
-                    statusContainer.style.display = 'block';
-                    statusContainer.className = 'error';
-                    resultDetails.innerHTML = `<p class="status-error">An error occurred while fetching the status.</p>`;
-                });
+    document.getElementById('passportNumber').addEventListener('keypress', function (event) {
+        if (event.key === 'Enter') {
+            checkVisaStatus();
         }
+    });
+</script>
 
-        function clearFields() {
-            document.getElementById('passportNumber').value = '';
-            document.getElementById('status-container').style.display = 'none';
-            document.getElementById('loading').style.display = 'none';
-            document.getElementById('note-section').style.display = 'none';
-        }
-
-        // Listen for Enter key to trigger the checkVisaStatus function
-        document.getElementById('passportNumber').addEventListener('keypress', function(event) {
-            if (event.key === 'Enter') {
-                checkVisaStatus();
-            }
-        });
-    </script>
 
 </body>
 </html>
