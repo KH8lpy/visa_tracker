@@ -6,161 +6,147 @@
     <title>Visa Status Tracker</title>
     <style>
 body {
-      font-family: 'Open Sans', sans-serif;
-      background-color: #f9f9f9;
-      margin: 0;
-      padding: 0;
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      overflow-y: auto;
-    }
-
-    .container {
-      background-color: white;
-      padding: 30px;
-      border-radius: 10px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-      width: 100%;
-      max-width: 600px;
-      animation: fadeIn 0.5s ease-in forwards;
-    }
-
-    h1 {
-      text-align: center;
-      color: #333;
-    }
-
-    label {
-      font-weight: bold;
-      margin-bottom: 10px;
-    }
-
-    input[type="text"] {
-      width: 100%;
-      padding: 10px;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-      margin-bottom: 20px;
-      font-size: 16px;
-    }
-
-    button {
-      background-color: #4CAF50;
-      color: white;
-      padding: 10px 20px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 16px;
-      transition: background-color 0.3s;
-      margin-right: 10px;
-    }
-
-    button:hover {
-      background-color: #45a049;
-    }
-
-    #status-container {
-      display: none;
-      margin-top: 20px;
-      padding: 15px;
-      border-radius: 5px;
-      background-color: #f0f0f0;
-      border-left: 5px solid #6c757d;
-      opacity: 0;
-      animation: fadeIn 1s ease-in forwards;
-    }
-
-    /* Updated background colors */
-    #status-container.approved {
-      background-color: #c8f0d0;
-      border-left: 5px solid #28a745;
-    }
-
-    #status-container.error {
-      background-color: #ffd6d6;
-      border-left: 5px solid #dc3545;
-    }
-
-    #status-container.pending {
-      background-color: #fff8cc;
-      border-left: 5px solid #f1c40f;
-    }
-
-    #status-container.incomplete {
-      background-color: #e6f0fa;
-      border-left: 5px solid #007bff;
-    }
-
-    /* Text color classes */
-    .status-approved {
-      color: #155724;
-      font-weight: bold;
-    }
-
-    .status-error {
-      color: #721c24;
-      font-weight: bold;
-    }
-
-    .status-pending {
-      color: #8a6d3b;
-      font-weight: bold;
-    }
-
-    .status-incomplete {
-      color: #0b5394;
-      font-weight: bold;
-    }
-
-    .loading {
-      text-align: center;
-      font-size: 18px;
-      display: none;
-    }
-
-    .spinner {
-      border: 4px solid #f3f3f3;
-      border-top: 4px solid #3498db;
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      animation: spin 2s linear infinite;
-      margin: 0 auto;
-    }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
-    @keyframes fadeIn {
-      0% { opacity: 0; }
-      100% { opacity: 1; }
-    }
-
-    .note {
-      margin-top: 20px;
-      font-size: 14px;
-      color: #555;
-      line-height: 1.6;
-    }
-
-    .note strong {
-      color: #333;
-    }
-
-    #result-details ul {
-      list-style-type: none;
-      padding: 0;
-    }
-
-    #result-details ul li {
-      margin-bottom: 10px;
-    }
-  </style>
+            font-family: 'Open Sans', sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-y: auto;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 600px;
+            animation: fadeIn 0.5s ease-in forwards;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        label {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            margin-bottom: 20px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #status-container {
+            display: none;
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            background-color: #f0f0f0;
+            border-left: 5px solid #6c757d;
+            opacity: 0;
+            animation: fadeIn 1s ease-in forwards;
+        }
+        #status-container.completed {
+            background-color: #d4edda;
+            border-left: 5px solid #28a745;
+        }
+        #status-container.rejected,
+        #status-container.withdraw {
+            background-color: #f8d7da;
+            border-left: 5px solid #dc3545;
+        }
+        #status-container.pending {
+            background-color: #fffef0;
+            border-left: 5px solid #ffeb3b;
+        }
+        #status-container.incomplete,
+        #status-container.document-received {
+            background-color: #f5f5f5;
+            border-left: 5px solid #9e9e9e;
+        }
+        #status-container.kiv {
+            background-color: #007bff;
+            border-left: 5px solid #0056b3;
+        }
+        .status-completed {
+            color: #155724;
+            font-weight: bold;
+        }
+        .status-rejected,
+        .status-withdraw {
+            color: #721c24;
+            font-weight: bold;
+        }
+        .status-pending {
+            color: #8a6d3b;
+            font-weight: bold;
+        }
+        .status-incomplete,
+        .status-document-received {
+            color: #333333;
+            font-weight: bold;
+        }
+        .status-kiv {
+            color: white;
+            font-weight: bold;
+        }
+        .loading {
+            text-align: center;
+            font-size: 18px;
+            display: none;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 2s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+        .note {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #555;
+            line-height: 1.6;
+        }
+        .note strong {
+            color: #333;
+        }
+        #result-details ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        #result-details ul li {
+            margin-bottom: 10px;
+        }
+    </style>
 </head>
 <body>
 
