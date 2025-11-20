@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Visa Status Tracker</title>
     <style>
-body {
+        body {
             font-family: 'Open Sans', sans-serif;
             background-color: #f9f9f9;
             margin: 0;
@@ -50,6 +50,7 @@ body {
             cursor: pointer;
             font-size: 16px;
             transition: background-color 0.3s;
+            margin-right: 10px;
         }
         button:hover {
             background-color: #45a049;
@@ -68,35 +69,31 @@ body {
             background-color: #d4edda;
             border-left: 5px solid #28a745;
         }
-        #status-container.rejected {
-            background-color: #f8d7da;
-            border-left: 5px solid #dc3545;
-        }
         #status-container.withdraw {
             background-color: #f8d7da;
-            border-left: 5px solid #dc3545; /* Red */
+            border-left: 5px solid #dc3545;
         }
         #status-container.pending {
             background-color: #fffef0;
             border-left: 5px solid #ffeb3b;
         }
-        #status-container.incomplete, {
+        #status-container.incomplete {
             background-color: #f5f5f5;
             border-left: 5px solid #9e9e9e;
         }
         #status-container.document-received {
-            background-color: #f5f5f5;  /* Light gray */
-            border-left: 5px solid #9e9e9e;  /* Darker gray */
+            background-color: #f5f5f5;
+            border-left: 5px solid #9e9e9e;
         }
         #status-container.kiv {
             background-color: #007bff;
             border-left: 5px solid #0056b3;
+            color: white;
         }
         .status-completed {
             color: #155724;
             font-weight: bold;
         }
-        .status-rejected,
         .status-withdraw {
             color: #721c24;
             font-weight: bold;
@@ -105,7 +102,10 @@ body {
             color: #8a6d3b;
             font-weight: bold;
         }
-        .status-incomplete,
+        .status-incomplete {
+            color: #333333;
+            font-weight: bold;
+        }
         .status-document-received {
             color: #333333;
             font-weight: bold;
@@ -154,12 +154,15 @@ body {
         }
     </style>
 </head>
+
 <body>
 
     <div class="container">
         <h1>Visa Status Tracker</h1>
+
         <label for="passportNumber">Enter Passport Number:</label>
         <input type="text" id="passportNumber" placeholder="e.g., A1234567">
+
         <button onclick="checkVisaStatus()">Check Status</button>
         <button onclick="clearFields()">Clear</button>
 
@@ -170,39 +173,35 @@ body {
 
         <div id="status-container">
             <h2>Visa Status:</h2>
-            <div id="result-details">
-                <!-- Will be populated dynamically -->
-            </div>
-            
-            <!-- Important Notes Section -->
-            <div class="note" id="note-section" style="display: none;">
-                <p><strong>We are pleased to inform you that your child(ren)'s visa(s) is/are now ready for collection at the following location:</strong></p>
+            <div id="result-details"></div>
+
+            <div class="note" id="note-section" style="display:none;">
+                <p><strong>We are pleased to inform you that your child(ren)'s visa(s) is/are now ready for collection:</strong></p>
                 <p><strong>Collection Details:</strong></p>
-                <p>Office Hours: Monday to Friday, 8 AM to 5 PM (Lunch hour: 12 noon to 1 PM)</p>
+                <p>Office Hours: Monday–Friday, 8 AM–5 PM (Lunch 12–1 PM)</p>
                 <p>Location: Block A, Admission and Visa Office</p>
 
-                <p><strong>Important information:</strong></p>
+                <p><strong>Important Information:</strong></p>
                 <ul>
-                    <li>Please ensure that all passport information is accurate. Should you have any questions or concerns, please contact us immediately.</li>
-                    <li>If you are in the process of applying for a Guardian Visa, we kindly request that you submit the necessary documents to us at your earliest convenience to avoid any delays.</li>
-                    <li>If your social pass is nearing its expiration, we kindly encourage you to make arrangements to leave the country before it expires.</li>
+                    <li>Ensure all passport information is accurate.</li>
+                    <li>If applying for a Guardian Visa, submit documents early to avoid delays.</li>
+                    <li>If your social pass is expiring soon, please plan to leave Malaysia before expiry.</li>
                 </ul>
-                <p>For further assistance or inquiries, feel free to reach out to us using the contact details provided below.</p>
+                <p>For further assistance, contact the Visa Office.</p>
             </div>
         </div>
     </div>
 
 <script>
-    const webAppUrl = 'https://script.google.com/macros/s/AKfycbz-OUIsBE4iMe6F6-HD5oQX-MORAZ7PPpnzhiUmMn8s7XR-ltN-XuPaXwZTWK2LOS8E/exec';
+    const webAppUrl =
+        'https://script.google.com/macros/s/AKfycbz-OUIsBE4iMe6F6-HD5oQX-MORAZ7PPpnzhiUmMn8s7XR-ltN-XuPaXwZTWK2LOS8E/exec';
 
     function checkVisaStatus() {
-        const passportNumberInput = document.getElementById('passportNumber');
+        const passportNumber = document.getElementById('passportNumber').value.trim();
         const statusContainer = document.getElementById('status-container');
         const resultDetails = document.getElementById('result-details');
         const noteSection = document.getElementById('note-section');
         const loadingDiv = document.getElementById('loading');
-
-        const passportNumber = passportNumberInput.value.trim();
 
         if (!passportNumber) {
             resultDetails.innerHTML = `<p class="status-error">Please enter your passport number.</p>`;
@@ -273,11 +272,11 @@ body {
 
                 let completionDate = '';
                 if (data['Completion Date']) {
-                    const date = new Date(data['Completion Date']);
-                    completionDate = `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
+                    const d = new Date(data['Completion Date']);
+                    completionDate = `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
                 }
 
-                let detailsHtml = `
+                let html = `
                     <ul>
                         <li><strong>Student Name:</strong> ${name}</li>
                         <li><strong>Passport Number:</strong> ${passport}</li>
@@ -285,30 +284,33 @@ body {
                 `;
 
                 if (status.toLowerCase() === 'completed' && completionDate) {
-                    detailsHtml += `<li><strong>Completion Date:</strong> ${completionDate}</li>`;
+                    html += `<li><strong>Completion Date:</strong> ${completionDate}</li>`;
                 } else {
                     if (data['Pass Expiry Date']) {
-                        detailsHtml += `<li><strong>Pass Expiry Date:</strong> ${data['Pass Expiry Date']}</li>`;
+                        html += `<li><strong>Pass Expiry Date:</strong> ${data['Pass Expiry Date']}</li>`;
                     }
-
                     if (data['Submission Date']) {
-                        detailsHtml += `<li><strong>Submission Date:</strong> ${data['Submission Date']}</li>`;
+                        html += `<li><strong>Submission Date:</strong> ${data['Submission Date']}</li>`;
                     }
                 }
 
                 if (data['Remarks']) {
-                    const remarks = data['Remarks'].split('\n').map(item => `<li>${item.trim()}</li>`).join('');
-                    detailsHtml += `
+                    const remarks = data['Remarks']
+                        .split('\n')
+                        .map(r => `<li>${r.trim()}</li>`)
+                        .join('');
+
+                    html += `
                         <li><strong>Remarks:</strong></li>
                         <ul>${remarks}</ul>
                     `;
                 }
 
-                detailsHtml += `</ul>`;
-                resultDetails.innerHTML = detailsHtml;
+                html += `</ul>`;
+                resultDetails.innerHTML = html;
             })
-            .catch(error => {
-                console.error("Error:", error);
+            .catch(err => {
+                console.error("Error:", err);
                 loadingDiv.style.display = 'none';
                 statusContainer.style.display = 'block';
                 statusContainer.className = 'error';
@@ -323,13 +325,15 @@ body {
         document.getElementById('note-section').style.display = 'none';
     }
 
-    document.getElementById('passportNumber').addEventListener('keypress', function (event) {
-        if (event.key === 'Enter') {
-            checkVisaStatus();
-        }
-    });
+    document
+        .getElementById('passportNumber')
+        .addEventListener('keypress', e => {
+            if (e.key === 'Enter') checkVisaStatus();
+        });
 </script>
-
 
 </body>
 </html>
+
+
+
